@@ -84,3 +84,11 @@ Bu endpoint, ilgili QR kaydını çözümler, tenant bilgisini belirler ve `scan
 - Ham tarama verileri UTC olarak saklanır.
 - `city` ve `country` alanları nullable'dır, uydurma veri yazılmaz.
 - Dashboard grafiklerinde hazır aggregate tablo değil, doğrudan ham event verileri kullanılır.
+
+## Bu Proje Ne Yapıyor?
+
+Bu proje, QR kod taramalarını kaydeden ve bu verileri anlaşılır bir dashboard içinde gösteren bir analitik paneldir.
+
+Uygulama, herkese açık `POST /api/scan` endpoint'i üzerinden gelen tarama olaylarını Supabase veritabanına yazar. Daha sonra giriş yapan kullanıcı için bu verileri tenant bazında filtreleyerek dashboard ekranında gösterir.
+
+Dashboard tarafında toplam tarama sayısı, gün gün tarama hareketi, en çok tarama gelen şehirler ve saatlik yoğunluk gibi metrikler gösterilir. Saatlik dağılım, kullanıcının metadata bilgisindeki saat dilimine göre yorumlanır. Kısacası bu proje, QR kullanımını takip etmek ve işletme tarafında temel içgörü üretmek için hazırlanmış bir MVP analitik uygulamasıdır.
