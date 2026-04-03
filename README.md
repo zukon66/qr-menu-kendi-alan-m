@@ -1,45 +1,45 @@
 # QR Analytics Dashboard MVP
 
-Bu proje, Supabase destekli QR tarama analitiklerini gösteren bir Next.js 14 dashboard uygulamasıdır.
+This app is a greenfield Next.js 14 dashboard for QR scan analytics backed by Supabase.
 
-## Kullanılan Teknolojiler
+## Stack
 
 - Next.js 14 App Router
 - TypeScript
-- Supabase SSR ve veritabanı
+- Supabase SSR and database
 - Recharts
 
-## Ortam Değişkenleri
+## Environment variables
 
-`.env.example` dosyasını `.env.local` olarak kopyalayın ve şu değişkenleri doldurun:
+Copy `.env.example` to `.env.local` and fill:
 
 - `NEXT_PUBLIC_SUPABASE_URL`
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 - `SUPABASE_SERVICE_ROLE_KEY`
 
-## Lokal Kurulum
+## Local setup
 
-1. Bağımlılıkları yükleyin:
+1. Install dependencies:
 
 ```bash
 npm install
 ```
 
-2. `supabase/migrations` içindeki migration dosyalarını çalıştırın.
+2. Apply Supabase migrations in `supabase/migrations`.
 
-3. Uygulamayı başlatın:
+3. Start the app:
 
 ```bash
 npm run dev
 ```
 
-4. Tarayıcıda `http://localhost:3000/dashboard` adresini açın.
+4. Open `http://localhost:3000/dashboard`.
 
-## Kimlik Doğrulama ve Tenant Varsayımları
+## Auth and tenant assumptions
 
-- Dashboard, giriş yapmış bir Supabase kullanıcısı bekler.
-- `organization_id` ve isteğe bağlı `organization_timezone` bilgileri `user_metadata` içinden okunur.
-- Örnek metadata:
+- The dashboard expects an authenticated Supabase user.
+- `organization_id` and optional `organization_timezone` are read from `user_metadata`.
+- Example metadata:
 
 ```json
 {
@@ -48,11 +48,11 @@ npm run dev
 }
 ```
 
-## Herkese Açık Tarama Kaydı
+## Public scan ingestion
 
 `POST /api/scan`
 
-Örnek istek:
+Example request:
 
 ```bash
 curl -X POST http://localhost:3000/api/scan \
@@ -66,29 +66,21 @@ curl -X POST http://localhost:3000/api/scan \
   }'
 ```
 
-Bu endpoint, ilgili QR kaydını çözümler, tenant bilgisini belirler ve `scan_events` tablosuna append-only mantığıyla yeni bir kayıt yazar.
+The route resolves the QR code record, derives the organization tenant, and writes an append-only `scan_events` row.
 
-## Doğrulama Kontrol Listesi
+## Verification checklist
 
-1. Geçerli bir `tenant_id` ve `slug` ile en az bir `qr_codes` kaydı ekleyin.
-2. Aynı `slug` için `POST /api/scan` isteği atın ve `scan_events` tablosunda yeni kayıt oluştuğunu doğrulayın.
-3. `organization_id` değeri ilgili tenant ile eşleşen bir kullanıcıyla giriş yapın.
-4. `/dashboard` sayfasını açıp şunları kontrol edin:
-   - toplam tarama sayısı seçilen aralıktaki kayıt sayısıyla eşleşiyor mu
-   - zaman serisi günlük bucket'lar halinde çiziliyor mu
-   - şehir grafiği `null` şehirleri dışlıyor mu
-   - saatlik dağılım kullanıcı metadata'sındaki saat dilimini kullanıyor mu
+1. Insert at least one `qr_codes` row with a valid `tenant_id` and `slug`.
+2. Hit `POST /api/scan` with that slug and verify a new row in `scan_events`.
+3. Sign in as a user whose `organization_id` matches the inserted tenant.
+4. Open `/dashboard` and confirm:
+   - total scans matches row count for the selected range
+   - scans over time renders daily buckets
+   - top cities excludes null cities
+   - hourly distribution uses the user timezone from metadata
 
-## Notlar
+## Notes
 
-- Ham tarama verileri UTC olarak saklanır.
-- `city` ve `country` alanları nullable'dır, uydurma veri yazılmaz.
-- Dashboard grafiklerinde hazır aggregate tablo değil, doğrudan ham event verileri kullanılır.
-
-## Bu Proje Ne Yapıyor?
-
-Bu proje, QR kod taramalarını kaydeden ve bu verileri anlaşılır bir dashboard içinde gösteren bir analitik paneldir.
-
-Uygulama, herkese açık `POST /api/scan` endpoint'i üzerinden gelen tarama olaylarını Supabase veritabanına yazar. Daha sonra giriş yapan kullanıcı için bu verileri tenant bazında filtreleyerek dashboard ekranında gösterir.
-
-Dashboard tarafında toplam tarama sayısı, gün gün tarama hareketi, en çok tarama gelen şehirler ve saatlik yoğunluk gibi metrikler gösterilir. Saatlik dağılım, kullanıcının metadata bilgisindeki saat dilimine göre yorumlanır. Kısacası bu proje, QR kullanımını takip etmek ve işletme tarafında temel içgörü üretmek için hazırlanmış bir MVP analitik uygulamasıdır.
+- Raw scan data is stored in UTC.
+- City and country are nullable and never fabricated.
+- Dashboard charts are derived from raw events, not precomputed aggregates.

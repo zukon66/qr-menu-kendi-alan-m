@@ -15,7 +15,7 @@ export function HourlyDistributionChart({
       <div className="chart-head">
         <div>
           <span className="chart-label">Saatlik desen</span>
-          <h2 className="chart-title">Saatlik dağılım</h2>
+          <h2 className="chart-title">Saatlik dagilim</h2>
         </div>
         <p className="panel-copy">{timezone}</p>
       </div>

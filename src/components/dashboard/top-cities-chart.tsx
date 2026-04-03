@@ -9,9 +9,9 @@ export function TopCitiesChart({ rows }: { rows: TopCityRow[] }) {
       <div className="chart-head">
         <div>
           <span className="chart-label">Konum</span>
-          <h2 className="chart-title">En çok taranan şehirler</h2>
+          <h2 className="chart-title">En cok taranan sehirler</h2>
         </div>
-        <p className="panel-copy">Boş şehir değerleri sıralamaya dahil edilmez.</p>
+        <p className="panel-copy">Bos sehir degerleri siralamaya dahil edilmez.</p>
       </div>
       <div className="chart-shell">
         <ResponsiveContainer height="100%" width="100%">

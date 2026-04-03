@@ -1,36 +1,51 @@
-import type { DashboardRange } from "@/lib/analytics/types";
+import type { DashboardFilters } from "@/lib/analytics/types";
+
+function formatRange(filters: DashboardFilters) {
+  if (filters.range === "today") {
+    return "Bugun";
+  }
+
+  if (filters.range === "30d") {
+    return "Son 30 gun";
+  }
+
+  if (filters.range === "custom") {
+    return filters.startDate && filters.endDate ? `${filters.startDate} - ${filters.endDate}` : "Ozel aralik";
+  }
+
+  return "Son 7 gun";
+}
 
 export function EmptyDashboardState({
-  range,
+  filters,
   timezone
 }: {
-  range: DashboardRange;
+  filters: DashboardFilters;
   timezone: string;
 }) {
   return (
     <section className="empty-card empty-preview-card">
       <div className="status-stack">
         <div>
-          <span className="eyebrow">Henüz tarama verisi yok</span>
-          <h2 className="chart-title">Panel hazır, fakat seçilen aralık boş.</h2>
+          <span className="eyebrow">Henuz tarama verisi yok</span>
+          <h2 className="chart-title">Panel hazir, fakat secili filtre sonuc vermedi.</h2>
         </div>
         <p className="status-copy">
-          <strong>POST /api/scan</strong> üzerinden en az bir herkese açık tarama event&apos;i gönderin ve
-          giriş yaptığınız kullanıcının Supabase metadata&apos;sında eşleşen bir
-          <strong> organization_id</strong> bulunduğundan emin olun.
+          Farkli bir tarih araligi veya filtre deneyin. Gerekirse <strong>POST /api/scan</strong> uzerinden yeni
+          event gonderip ayni tenant ile tekrar kontrol edin.
         </p>
         <ul className="empty-list">
           <li>
-            <span className="list-label">Aralık</span>
-            {range === "30d" ? "Son 30 gün" : "Son 7 gün"}
+            <span className="list-label">Aralik</span>
+            {formatRange(filters)}
           </li>
           <li>
             <span className="list-label">Saat dilimi</span>
             {timezone}
           </li>
           <li>
-            <span className="list-label">Gerekli event akışı</span>
-            herkese açık QR isteği -&gt; server route -&gt; Supabase scan_events
+            <span className="list-label">Filtreler</span>
+            QR, sehir, cihaz ve kaynak secimleri mevcut gorunumu daraltir.
           </li>
         </ul>
       </div>

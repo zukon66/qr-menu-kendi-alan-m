@@ -1,35 +1,21 @@
 import { redirect } from "next/navigation";
-import { MetricsCards } from "@/components/dashboard/metrics-cards";
 import { LogoutButton } from "@/components/auth/logout-button";
+import { DashboardFiltersBar } from "@/components/dashboard/filters-bar";
 import { HourlyDistributionChart } from "@/components/dashboard/hourly-distribution-chart";
+import { MetricsCards } from "@/components/dashboard/metrics-cards";
+import { QrPerformanceTable } from "@/components/dashboard/qr-performance-table";
 import { ScansOverTimeChart } from "@/components/dashboard/scans-over-time-chart";
-import { TopCitiesChart } from "@/components/dashboard/top-cities-chart";
 import { EmptyDashboardState } from "@/components/dashboard/states";
-import { getDashboardAnalytics, normalizeRange } from "@/lib/analytics/queries";
+import { TopCitiesChart } from "@/components/dashboard/top-cities-chart";
+import { TrendInsights } from "@/components/dashboard/trend-insights";
+import { getDashboardAnalytics, getRangeLabel, normalizeFilters } from "@/lib/analytics/queries";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
-import type { DashboardAnalytics } from "@/lib/analytics/types";
 
 type DashboardPageProps = {
-  searchParams?: {
-    range?: string;
-  };
+  searchParams?: Record<string, string | string[] | undefined>;
 };
 
 export const dynamic = "force-dynamic";
-
-function getBusiestHour(analytics: DashboardAnalytics) {
-  return analytics.hourlyDistribution.reduce<{ hour: string; scans: number } | null>((current, row) => {
-    if (!current || row.scans > current.scans) {
-      return row;
-    }
-
-    return current;
-  }, null);
-}
-
-function getTopCity(analytics: DashboardAnalytics) {
-  return analytics.topCities[0] ?? null;
-}
 
 export default async function DashboardPage({ searchParams }: DashboardPageProps) {
   const supabase = createServerSupabaseClient();
@@ -41,11 +27,8 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
     redirect("/login");
   }
 
-  const range = normalizeRange(searchParams?.range);
-  const analytics = await getDashboardAnalytics(range);
-  const busiestHour = getBusiestHour(analytics);
-  const topCity = getTopCity(analytics);
-  const recentActivity = analytics.scansOverTime.slice(-5).reverse();
+  const filters = normalizeFilters(searchParams);
+  const analytics = await getDashboardAnalytics(filters);
 
   return (
     <main className="dashboard-page">
@@ -60,48 +43,39 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
             </div>
             <div>
               <span className="brand-title">QR Analytics</span>
-              <p className="brand-subtitle">İşletmeniz için anlık tarama içgörüleri</p>
+              <p className="brand-subtitle">Filtrelenebilir analitik, trend ve QR performans gorunumu</p>
             </div>
           </div>
           <LogoutButton />
         </section>
+
+        <DashboardFiltersBar analytics={analytics} />
 
         <section className="panel dashboard-hero-card">
           <div className="dashboard-hero-grid">
             <div className="dashboard-control-panel">
               <div className="control-stack">
                 <div>
-                  <span className="eyebrow">Analitik görünümü</span>
-                  <h1>Dashboard</h1>
+                  <span className="eyebrow">Analitik gorunumu</span>
+                  <h1>Dashboard V2</h1>
                 </div>
-                <label className="dashboard-field">
-                  <span className="field-label">Veri aralığı</span>
-                  <form className="range-form range-form-wide" action="/dashboard">
-                    <button aria-pressed={range === "7d"} name="range" type="submit" value="7d">
-                      Son 7 gün
-                    </button>
-                    <button aria-pressed={range === "30d"} name="range" type="submit" value="30d">
-                      Son 30 gün
-                    </button>
-                  </form>
-                </label>
 
                 <div className="stat-field-grid">
+                  <article className="dashboard-field stat-field">
+                    <span className="field-label">Secili aralik</span>
+                    <strong>{getRangeLabel(analytics.filters.range)}</strong>
+                  </article>
                   <article className="dashboard-field stat-field">
                     <span className="field-label">Toplam tarama</span>
                     <strong>{analytics.totalScans.toLocaleString()}</strong>
                   </article>
                   <article className="dashboard-field stat-field">
-                    <span className="field-label">Görülen şehir</span>
-                    <strong>{analytics.topCities.length.toLocaleString()}</strong>
+                    <span className="field-label">En yogun gun</span>
+                    <strong>{analytics.busiestDay?.day || "--"}</strong>
                   </article>
                   <article className="dashboard-field stat-field">
-                    <span className="field-label">En yoğun saat</span>
-                    <strong>{busiestHour ? `${busiestHour.hour}:00` : "--"}</strong>
-                  </article>
-                  <article className="dashboard-field stat-field">
-                    <span className="field-label">Saat dilimi</span>
-                    <strong>{analytics.timezone}</strong>
+                    <span className="field-label">En verimli saat</span>
+                    <strong>{analytics.bestHour ? `${analytics.bestHour.hour}:00` : "--"}</strong>
                   </article>
                 </div>
 
@@ -111,27 +85,27 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
 
             <div className="dashboard-preview-panel">
               {analytics.totalScans === 0 ? (
-                <EmptyDashboardState range={range} timezone={analytics.timezone} />
+                <EmptyDashboardState filters={analytics.filters} timezone={analytics.timezone} />
               ) : (
                 <div className="preview-stack">
                   <div className="preview-surface">
                     <div className="preview-summary">
-                      <span className="eyebrow">Canlı özet</span>
+                      <span className="eyebrow">Canli ozet</span>
                       <p className="preview-primary-value">{analytics.totalScans.toLocaleString()}</p>
-                      <p className="preview-copy">Bu aralıkta kaydedilen toplam QR taraması</p>
+                      <p className="preview-copy">Secili filtrelere uyan toplam QR taramasi</p>
                     </div>
                     <div className="preview-pill-row">
                       <div className="preview-pill">
-                        <span>Şehir lideri</span>
-                        <strong>{topCity ? topCity.city : "Veri yok"}</strong>
+                        <span>Sehir lideri</span>
+                        <strong>{analytics.topCities[0]?.city || "Veri yok"}</strong>
                       </div>
                       <div className="preview-pill">
-                        <span>Yoğun saat</span>
-                        <strong>{busiestHour ? `${busiestHour.hour}:00` : "--"}</strong>
+                        <span>En iyi QR</span>
+                        <strong>{analytics.topQr?.slug || "Veri yok"}</strong>
                       </div>
                     </div>
                   </div>
-                  <ScansOverTimeChart points={analytics.scansOverTime} range={range} />
+                  <TrendInsights analytics={analytics} />
                 </div>
               )}
             </div>
@@ -140,32 +114,14 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
 
         {analytics.totalScans > 0 ? (
           <>
-            <section className="recent-activity-section">
-              <div className="section-copy">
-                <span className="eyebrow">Son hareketler</span>
-                <h2 className="section-title">En yeni tarama yoğunlukları</h2>
-              </div>
-              <div className="recent-list">
-                {recentActivity.map((item) => (
-                  <article className="recent-list-item" key={item.day}>
-                    <div className="recent-avatar" aria-hidden="true">
-                      {item.scans}
-                    </div>
-                    <div className="recent-meta">
-                      <strong>{item.day}</strong>
-                      <span>{item.scans} tarama kaydı</span>
-                    </div>
-                    <div className="recent-actions">
-                      <span className="recent-badge">{range === "30d" ? "30 Gün" : "7 Gün"}</span>
-                    </div>
-                  </article>
-                ))}
-              </div>
-            </section>
-
-            <section className="analytics-bottom-grid">
+            <section className="analytics-bottom-grid analytics-bottom-grid-wide">
+              <ScansOverTimeChart points={analytics.scansOverTime} range={analytics.filters.range} />
               <TopCitiesChart rows={analytics.topCities} />
               <HourlyDistributionChart rows={analytics.hourlyDistribution} timezone={analytics.timezone} />
+            </section>
+
+            <section className="table-section">
+              <QrPerformanceTable rows={analytics.qrPerformance} />
             </section>
           </>
         ) : null}

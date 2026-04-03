@@ -3,6 +3,22 @@
 import type { DashboardRange, ScansOverTimePoint } from "@/lib/analytics/types";
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
+function getRangeLabel(range: DashboardRange) {
+  if (range === "today") {
+    return "Bugun";
+  }
+
+  if (range === "30d") {
+    return "Son 30 gun";
+  }
+
+  if (range === "custom") {
+    return "Ozel aralik";
+  }
+
+  return "Son 7 gun";
+}
+
 export function ScansOverTimeChart({
   points,
   range
@@ -15,9 +31,9 @@ export function ScansOverTimeChart({
       <div className="chart-head">
         <div>
           <span className="chart-label">Zaman serisi</span>
-          <h2 className="chart-title">Zamana göre taramalar</h2>
+          <h2 className="chart-title">Zamana gore taramalar</h2>
         </div>
-        <p className="panel-copy">{range === "30d" ? "Son 30 gün" : "Son 7 gün"}</p>
+        <p className="panel-copy">{getRangeLabel(range)}</p>
       </div>
       <div className="chart-shell">
         <ResponsiveContainer height="100%" width="100%">

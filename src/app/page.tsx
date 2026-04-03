@@ -11,13 +11,9 @@ export default function HomePage() {
           Supabase bilgilerini ve migration&apos;ları bağladıktan sonra paneli kullanabilirsiniz.
         </p>
         <div className="hero-actions">
-          <Link className="button-link" href="/dashboard">
-            Paneli aç
-          </Link>
           <Link className="button-link" href="/login">
             Giriş yap
           </Link>
-          <span className="pill">Herkese açık tarama endpoint&apos;i: POST /api/scan</span>
         </div>
       </section>
     </main>

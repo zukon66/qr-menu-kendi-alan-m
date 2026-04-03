@@ -15,20 +15,19 @@ export default async function LoginPage() {
   }
 
   return (
-    <main className="shell">
-      <section className="panel auth-card">
-        <div className="status-stack">
-          <div>
-            <span className="eyebrow">Supabase kimlik doğrulama</span>
-            <h1>Panelinize giriş yapın</h1>
-          </div>
-          <p className="status-copy">
-            <strong>raw_user_meta_data</strong> içinde <strong>organization_id</strong> ve
-            tercihen <strong>organization_timezone</strong> bulunan aynı Supabase kullanıcısıyla
-            giriş yapın.
-          </p>
-          <LoginForm />
+    <main className="login-page">
+      <div className="login-spark login-spark-left" aria-hidden="true" />
+      <div className="login-spark login-spark-right" aria-hidden="true" />
+      <section className="login-centered-card" aria-label="Giriş formu">
+        <div className="login-top">
+          <span className="login-card-kicker">QR Analytics MVP</span>
+          <h1>Giriş Yap</h1>
         </div>
+        <div className="login-body">
+          <LoginForm />
+          <p className="login-helper">Şifremi Unuttum</p>
+        </div>
+        <div className="login-footer">Hesabın yok mu? Kayıt Ol</div>
       </section>
     </main>
   );

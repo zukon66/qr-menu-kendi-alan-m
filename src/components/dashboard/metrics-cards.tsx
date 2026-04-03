@@ -1,43 +1,42 @@
 import type { DashboardAnalytics } from "@/lib/analytics/types";
 
+function formatRange(filters: DashboardAnalytics["filters"]) {
+  if (filters.range === "today") {
+    return "Bugun";
+  }
+
+  if (filters.range === "30d") {
+    return "Son 30 gun";
+  }
+
+  if (filters.range === "custom") {
+    return filters.startDate && filters.endDate ? `${filters.startDate} - ${filters.endDate}` : "Ozel aralik";
+  }
+
+  return "Son 7 gun";
+}
+
 export function MetricsCards({ analytics }: { analytics: DashboardAnalytics }) {
-  const cityCount = analytics.topCities.length;
-  const busiestHour = analytics.hourlyDistribution.reduce<{ hour: string; scans: number } | null>(
-    (current, row) => {
-      if (!current || row.scans > current.scans) {
-        return row;
-      }
-
-      return current;
-    },
-    null
-  );
-
-  const averagePerDay =
-    analytics.scansOverTime.length > 0
-      ? Math.round(analytics.totalScans / analytics.scansOverTime.length)
-      : 0;
-
   const cards = [
     {
       label: "Toplam tarama",
       value: analytics.totalScans.toLocaleString(),
-      note: `${analytics.range === "30d" ? "Son 30 gün" : "Son 7 gün"}`
+      note: formatRange(analytics.filters)
     },
     {
-      label: "Görülen şehir",
-      value: cityCount.toLocaleString(),
-      note: cityCount > 0 ? "Boş şehir değerleri sıralamaya dahil edilmez." : "Henüz şehir kırılımı yok."
+      label: "En cok sehirler",
+      value: analytics.topCities.length.toLocaleString(),
+      note: "Bos sehir degerleri siralamaya dahil edilmez."
     },
     {
-      label: "Günlük ortalama",
-      value: averagePerDay.toLocaleString(),
-      note: "Ham tarama event'lerinden türetilir"
+      label: "En iyi QR",
+      value: analytics.topQr?.slug || "--",
+      note: analytics.topQr ? `${analytics.topQr.scans.toLocaleString()} tarama` : "Secili filtrede QR verisi yok"
     },
     {
-      label: "En yoğun saat",
-      value: busiestHour ? `${busiestHour.hour}:00` : "--",
-      note: `${analytics.timezone} saat dilimine göre`
+      label: "Saat dilimi",
+      value: analytics.timezone,
+      note: analytics.bestHour ? `En verimli saat ${analytics.bestHour.hour}:00` : "Saatlik veri bekleniyor"
     }
   ];
 
@@ -46,7 +45,7 @@ export function MetricsCards({ analytics }: { analytics: DashboardAnalytics }) {
       {cards.map((card) => (
         <article className="metric-card compact-metric-card" key={card.label}>
           <span className="metric-label">{card.label}</span>
-          <p className="metric-value">{card.value}</p>
+          <p className="metric-value metric-value-sm">{card.value}</p>
           <p className="metric-note">{card.note}</p>
         </article>
       ))}
